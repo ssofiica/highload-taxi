@@ -137,6 +137,9 @@ RPS по ДЦ и запросам
 ### Схема отказоустойчивости
 ### Нагрузка по терминации SSL
 
+## 5. Схема БД
+![Пример изображения](bd.png)
+
 ### Использованные источники
 [^1]: [Презентация для инвесторов МКПАО "Яндекс" с данными за 2 квартал 2024](https://yastatic.net/s3/ir-docs/docs/2024/q2/57a1cu049ffbd144aeged36d47h173c2/IR_2Q2024_RUS_NEW.pdf)
 [^2]: [Сколько пользователей пользуется Яндекс.Такси в день: статистика и актуальные данные](https://investim.guru/obzory/skolko-polzovateley-polzuetsya-yandeks-taksi-v-den-statistika-i-aktualnye-dannye)
