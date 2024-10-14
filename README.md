@@ -173,6 +173,7 @@ SSL-терминация будет происходить на балансир
 | ride                |`UPDATE ride SET ..` - для каждого поля один раз, для route_points несколько<br> `SELECT ... JOIN ...` - когда пользователь хочет посмотреть информацию о заказе, в этом случае необходим JOIN с таблицами `garage, driver, car` |
 | driver/passanger rating              |`UPDATE .. SET` - каждый раз, когда пользователя оценили<br> `SELECT rating` - при получении инфы о водители| 
 | driver/passanger | `SELECT ..` - чтение инфы о пользователях<br> Запись происходит редко|
+| current geoposition | `UPDATE ..` поля point каждые 3 секунды и поля status (выход на линию, в пути, недоступен ...)
 
 ### БД
 1. Запросом с наибольшим rps является сохранение геопозиции водителя. Водитель отправляет геопозицию, а потом к ней обращается сервиcы для сопоставления водителей и пассажиров и расчета стоимости поездок. Поэтому для этой цели будем использовать Clickhouse
@@ -188,6 +189,20 @@ SSL-терминация будет происходить на балансир
 - **Garage:** по driver_id и car_id
 - **Driver Rating:** по driver_id
 - **Passanger Rating:** по passanger_id
+
+### Клиентские библиотеки
+- Postgres: https://github.com/jackc/pgx
+- Redis: https://github.com/redis/go-redis
+- Kafka: https://github.com/segmentio/kafka-go
+- Clickhouse: https://github.com/ClickHouse/clickhouse-go
+- S3: https://github.com/aws/aws-sdk-go
+
+### Шардирование и резервирование
+Для таблиц ride, driver, passanger, garage нардирование по ключу, так как у данных таблиц нет привязки к времени или геоположению
+
+### Репликация
+- Postgres: 1 мастер хост и 2 ведущих
+- Clickhouse: поддерживает мультимастер репликацию, 2 мастер хоста и 2 ведущих
 
 ### Использованные источники
 [^1]: [Презентация для инвесторов МКПАО "Яндекс" с данными за 2 квартал 2024](https://yastatic.net/s3/ir-docs/docs/2024/q2/57a1cu049ffbd144aeged36d47h173c2/IR_2Q2024_RUS_NEW.pdf)
