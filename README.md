@@ -171,27 +171,35 @@ SSL-терминация будет происходить на балансир
 ## 6. Физическая схема БД <a name="6"></a>
 
 ### Запросы
-| Таблица             | Запросы|
+| Таблица             | Запросы                |
 |---------------------|------------------------|
-| ride                |`UPDATE ride SET ..` - для каждого поля один раз, для route_points несколько<br> `SELECT ... JOIN ...` - когда пользователь хочет посмотреть информацию о заказе, в этом случае необходим JOIN с таблицами `garage, driver, car` |
-| driver/passanger rating |`UPDATE .. SET` - каждый раз, когда пользователя оценили<br> `SELECT rating` - при получении инфы о водители| 
-| driver/passanger | `SELECT ..` - чтение инфы о пользователях<br> Запись происходит редко|
-| current geoposition | `UPDATE ..` поля point каждые 3 секунды и поля status (выход на линию, в пути, недоступен ...)
+| ride                |`INSERT INTO ride(passanger_id, start_address, end_address, price, status) ..`-создание заказа<br> `UPDATE ride SET garage_id=$1, points=$2, waiting_duration=$3, waiting_price=$4, status=$5, started_at=$6 WHERE id=$7`- начало поездки<br> `UPDATE ride SET price=$1, fee=$2, duration=$3, status=$4 WHERE id=$5`-завершение поездки<br> `SELECT id, garage_id, route_points, start_address, end_address, price, started_at, duration, status WHERE id=$1` - данные об определенной поездке<br> `SELECT id, garage_id, route_points, start_address, end_address, price, started_at, duration, status WHERE passanger_id=$1 ORDER BY started_at`-история поездок пользователя|
+| driver/passanger rating |`UPDATE .. SET raiting=$1, count=$2 WHERE .._id=$3` - каждый раз, когда пользователя оценили<br> `SELECT rating FROM .. WHERE .._id=$1`|
+| driver/passanger    | `SELECT .. FROM driver/passanger WHERE id=$1` - данные о водителях/пользователях<br> Запись происходит редко|
+| current geoposition | `UPDATE сurrent_geoposition SET point=$1, status=$2 WHERE driver_id=$3` - каждые 3 секунды<br> `SELECT driver_id, point, status WHERE id=$1` |
+| geoposition | `INSERT INTO сurrent_geoposition(driver_id, point, at, ride_id) ..` - каждые 3 секунды<br> `SELECT driver_id, point, at WHERE ride_id=$1 ORDER BY at`<br> `SELECT driver_id, point, at WHERE at<$1 AND at>$2` |
+| car                 | `SELECT .. FROM car WHERE id=$1` - данные о машине по id|
+| garage              | `SELECT driver_id, car_id, class, options FROM garage WHERE id=$1`|
+| demand              | `INSERT INTO demand(start_address, ride_id, class, options, hegaxon_id) ..`<br> `SELECT id, start_address, ride_id, class, options, hegaxon_id FROM demand`|
+| proposal            | `INSERT INTO proposal(driver_geo, class, options, hegaxon_id, garage_id) ..`<br> `SELECT id, driver_geo, class, options, hegaxon_id, garage_id FROM proposal`|
 
 ### Выбор БД
-1. Запросом с наибольшим rps является сохранение геопозиции водителя. Водитель отправляет геопозицию, а потом к ней обращается сервиcы для сопоставления водителей и пассажиров и расчета стоимости поездок. Поэтому для этой цели будем использовать Clickhouse
+1. Запросом с наибольшим rps является сохранение геопозиции водителя. Водитель отправляет геопозицию, а потом к ней обращается сервиcы для сопоставления водителей и пассажиров и расчета стоимости поездок. 
 2. Таблицы driver, passanger, garage, car, type изменяются редко, а читаются часто, сильно связаны с ride. Хранить будем в Postgres
-3. Сессии пользователей будут храниться в Tarantool
+3. Сессии пользователей будут храниться в Redis
 4. В таблице statistics хранятся данные по поездкам для аналитики, поэтому так же будем использовать Clickhouse
 5. Kafka для динамического ценообразования и расчета спроса, данные так же кешируются в Redis [^5]
 6. S3-хранилище для хранения сгенерированных карт спроса и аватарок [^5]
 
 ### Индексы
 Будем использовать BTree индекс, он хорошо подходит для столбцов , являющихся ключами
-- **Ride:** по id, passanger_id, garage_id
-- **Garage:** по driver_id и car_id
+- **Ride:** по id, passanger_id, started_at
+- **Current geoposition:** по id, driver_id
+- **Geoposition:** по ride_id, at
+- **Garage:** по id
 - **Driver Rating:** по driver_id
 - **Passanger Rating:** по passanger_id
+- **Car:** по id
 
 ### Клиентские библиотеки
 - Postgres: https://github.com/jackc/pgx
@@ -201,7 +209,6 @@ SSL-терминация будет происходить на балансир
 - S3: https://github.com/aws/aws-sdk-go
 
 ### Шардирование и резервирование
-Для таблиц ride, driver, passanger, garage нардирование по ключу, так как у данных таблиц нет привязки к времени или геоположению
 
 ### Репликация
 - Postgres: 1 мастер хост и 2 ведущих
