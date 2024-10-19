@@ -166,7 +166,7 @@ SSL-терминация будет происходить на балансир
 | driver rating values| 106  | 2,5 мдрд| 240 Гб   | *-* | *10* |
 | passanger rating values|106| 2,5 млрд| 240 Гб   | *-* | *10* |
 | geoposition         | 36   | 7 трлн  | 229 Тб | *-* | *10000* |
-| current geoposition | 64   | 280 тыс | 17 Мб  | *22* | *14000* |
+| current geoposition | 76   | 280 тыс | 20 Мб  | *25* | *20000* |
 | *demand*            |*148* | *8 млрд+?* | *1 Тб* | *115* | *115* |
 | *proposal*          |*128* | *8 млрд+?* | *950 Гб* | *66* | *82* |
 
@@ -178,25 +178,28 @@ SSL-терминация будет происходить на балансир
 | ride                |`INSERT INTO ride(passanger_id, start_address, end_address, price, status) ..`-создание заказа<br> `UPDATE ride SET garage_id=$1, points=$2, waiting_duration=$3, waiting_price=$4, status=$5, started_at=$6 WHERE id=$7`- начало поездки<br> `UPDATE ride SET price=$1, fee=$2, duration=$3, status=$4 WHERE id=$5`-завершение поездки<br> `SELECT id, garage_id, route_points, start_address, end_address, price, started_at, duration, status WHERE id=$1` - данные об определенной поездке<br> `SELECT id, garage_id, route_points, start_address, end_address, price, started_at, duration, status WHERE passanger_id=$1 ORDER BY started_at`-история поездок пользователя|
 | driver/passanger rating |`UPDATE .. SET raiting=$1, count=$2 WHERE .._id=$3` - каждый раз, когда пользователя оценили<br> `SELECT rating FROM .. WHERE .._id=$1`|
 | driver/passanger    | `SELECT .. FROM driver/passanger WHERE id=$1` - данные о водителях/пользователях<br> Запись происходит редко|
-| current geoposition | `UPDATE сurrent_geoposition SET point=$1, status=$2 WHERE driver_id=$3` - каждые 3 секунды<br> `SELECT driver_id, point, status WHERE id=$1` |
+| current geoposition | `UPDATE сurrent_geoposition SET point=$1, status=$2, speed=$3, at=$4 WHERE driver_id=$5` - каждые 3 секунды<br> `SELECT driver_id, point, status, speed, at WHERE id=$1`<br> `SELECT driver_id, point, status, speed, at WHERE at=$1 AND status=$2` |
 | geoposition | `INSERT INTO сurrent_geoposition(driver_id, point, at, ride_id) ..` - каждые 3 секунды<br> `SELECT driver_id, point, at WHERE ride_id=$1 ORDER BY at`<br> `SELECT driver_id, point, at WHERE at<$1 AND at>$2` |
 | car                 | `SELECT .. FROM car WHERE id=$1` - данные о машине по id|
 | garage              | `SELECT driver_id, car_id, class, options FROM garage WHERE id=$1`|
 | demand              | `INSERT INTO demand(start_address, ride_id, class, options, hegaxon_id) ..`<br> `SELECT id, start_address, ride_id, class, options, hegaxon_id FROM demand`|
 | proposal            | `INSERT INTO proposal(driver_geo, class, options, hegaxon_id, garage_id) ..`<br> `SELECT id, driver_geo, class, options, hegaxon_id, garage_id FROM proposal`|
 
+### Денормализация
+- таблица type хранит марки и модели машин, когда водитель берет новую машину ему предлагается список марок и моделей из этой таблицы. И в таблицу car сохраняется не id вида машины, а model и brand, избавляемся от join таким образом
+
 ### Выбор БД
 1. Основной БД для храненения данных является PostgreSQl
 2. Сессии пользователей будут храниться в Redis
 3. В таблице statistics хранятся данные по поездкам для аналитики, поэтому так же будем использовать Clickhouse
-4. Таблица current-geoposition, proposal, demand должны быть быстро доступны, так как на основе их подбираются водители и пассажиры и рассчитываются цены, это должно происходить максимум за 100 мс. Так что эти таблицы будем хранить в Redis, так как она работает в оперативной памяти и и обеспечивает быстрый доступ к данным
+4. Таблица current-geoposition, proposal, demand должны быть быстро доступны, так как на основе их подбираются водители и пассажиры и рассчитываются цены, это должно происходить максимум за 100 мс. Так что эти таблицы будем хранить в Redis, так как она работает в оперативной памяти и обеспечивает быстрый доступ к данным. Redis pubsub
 5. Kafka для динамического ценообразования и расчета спроса, данные так же кешируются в Redis [^5]
 6. S3-хранилище для хранения сгенерированных карт спроса и аватарок [^5]
 
 ### Индексы
 Будем использовать BTree индекс, он хорошо подходит для столбцов , являющихся ключами
 - **Ride:** по passanger_id, started_at
-- **Current geoposition:** по driver_id
+- **Current geoposition:** по driver_id, at, status
 - **Geoposition:** по ride_id, at
 - **Driver Rating:** по driver_id
 - **Passanger Rating:** по passanger_id
@@ -216,6 +219,8 @@ SSL-терминация будет происходить на балансир
 
 ## 6. Алгоритмы <a name="7"></a>
 
+### Подбор водителей
+Водитель отправляет свою геолокацию каждые 3-4 секунды. Информация только о широте и долготе не эффективна при подборе водителей для заказов. Поэтому необходимо ограничить пространство на ячейки, одним из алгоритмов позволяющих это делать является H3 от Uber **ссылку вставить**. Вся планета разбита на шестиугольники(гексагоны), у каждого свой 64-битный идентификатор. На основе отправленной геопозации водителя расчитывается в какой ячейке он находится и эта информация сохраняется. В итоге подбор водителей и пассажиров происходит не в необъятном пространстве, а в ограниченной области.
 ### Распределение водителей по пассажирам
 
 ### Использованные источники
