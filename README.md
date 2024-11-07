@@ -167,7 +167,7 @@ SSL-терминация будет происходить на балансир
 | rating              | PostgreSQL | 14   | 80 млн  | 1 Гб   |  9  |  3  |
 | driver rating values| PostgreSQL | 106  | 2,5 мдрд| 240 Гб |  -  |  10  |
 | passanger rating values|PostgreSQL | 106| 2,5 млрд| 240 Гб |  -  |  10  |
-| geoposition         | PostgreSQL | 36   | 7 трлн  | 229 Тб |  -  |  10000  |
+| geoposition         | PostgreSQL | 36   | 3 трлн  | 100 Тб |  -  |  10000  |
 | current geoposition | Redis | 76   | 280 тыс | 20 Мб  |  25  |  20000  |
 | demand              | Redis | 148  | 7 млн   | 1 Гб   | 115  |  115  |
 | proposal            | Redis | 128  | 7 млн   | 950 Мб | 66   |  82  |
