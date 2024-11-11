@@ -266,7 +266,8 @@ Geoposition особенно велика, произведем партицир
 
 ## 10. Схема проекта <a name="10"></a>
 ![Пример изображения](project2.png)
-
+`Ride, Dispatch, Driver, Surge` - представляют совокупности микросервисов. Каждый пишет логи в Victoria Metrics, на основе которых строятся дашброды в Grafana<br>
+`Ride` пишет данные в Redis в Demand, пишет и читает в PostgreSQL о поездке, пишет в Kafka раз в день метрики о поездках
 ### Использованные источники
 [^1]: [Презентация для инвесторов МКПАО "Яндекс" с данными за 2 квартал 2024](https://yastatic.net/s3/ir-docs/docs/2024/q2/57a1cu049ffbd144aeged36d47h173c2/IR_2Q2024_RUS_NEW.pdf)
 [^2]: [Сколько пользователей пользуется Яндекс.Такси в день: статистика и актуальные данные](https://investim.guru/obzory/skolko-polzovateley-polzuetsya-yandeks-taksi-v-den-statistika-i-aktualnye-dannye)
