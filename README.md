@@ -266,34 +266,34 @@ Geoposition особенно велика, произведем партицир
 | Envoy      | Наличие нескольких экземпляров с одним виртуальным ip |
 
 ## 10. Схема проекта <a name="10"></a>
-![Пример изображения](project2.png)
+![Пример изображения](project3.png)
 
 ## 11. Выбор оборудования и хостинга<a name="11"></a>
 
 | Сервис   | Целевая пиковая нагрузка приложения | CPU | RAM | Net |
 | -------- | ----------------------------------- | --- | --- | --- |
-| Ride, Surge, Dispatch | 1k | 10 | 11,5 GB | 3 MB/s  |
-| Driver   | 81k | 800 | 40 GB | 237 MB/s |
-| Envoy    | 85k | 800 | 10 GB | 249 MB/s |
-| Postgres | 80k | 800 |  | 10 MB/s  |
-| Redis    | 320 | 3   | 4 GB | 19 MB/s  |
-| ClickHouse | 9,6k rpm | 2 |  |1,6 MB/m |
-| Kafka    | 160 | 2   |  | 26 KB/s |
+| Ride, Surge, Dispatch | 1k | 16 | 32 GB | 3 MB/s  |
+| Driver   | 81k | 1 | 40 GB  | 237 MB/s |
+| Envoy    | 85k | 16 | 64 GB  | 249 MB/s |
+| Postgres | 80k | 64 | 512 GB | 10 MB/s  |
+| Redis    | 320 | 2  | 4 GB   | 19 MB/s  |
+| ClickHouse | 9,6k rpm | 4 | 16 GB |1,6 MB/m |
+| Kafka    | 160 | 4   | 8 GB | 26 KB/s |
 
-*100 rps/CPU<br>
-**примем размер http запроса в 3 Кб
+Ride, Surge, Dispatch хоть и имеют сравнительно небольшой rps, но у них самые нагруженные вычисления<br>
+Envoy - 1 core per 10k rps, request+response=3 KB
 
 Для каждого сервиса подбираем конфигурацию сервера и хостинг. Для покупных серверов считаем амортизацию на 5 лет.
 
-| Название---- | Хостинг | Конфигурация                       | Cores | Cnt | Покупка | Аренда |
+| Название     | Хостинг | Конфигурация                       | Cores | Cnt | Покупка | Аренда |
 | ------------ | ------- | ---------------------------------- | ----- | --- | ------- | ----- |
-| kubenode RSD | own     | `2x6338`/16GB/1xNVMe512GB/`2x25Gb/s`  |    16 |   |   |   | 
-| kubenode Driver | own  | `i5-13500`/64GB/1xNVMe512GB/`2x10Gb/s` |     |    |    |   |
-| kubenode Envoy  | own  | `2x6338`/16GB/`2xNVMe4T`/`2x25Gb/s` |     |   |   |   | 
-| kubenode Postgres | own| `2x6338`/`16GB`/3xNVMe4T/`2x25Gb/s`  |    16 |   |   |   | 
-| kubenode Redis  | own  | `2x6338`/8GB/1xNVMe512GB/`2x25Gb/s`  |    16 |   |   |   | 
-| kubenode ClickHouse | own | `2x6338`/`16GB`/2xNVMe4T/`2x25Gb/s`  |    16 |   |   |   
-| kubenode Kafka  | own     | `2x6338`/`16GB`/1xNVMe512GB/`2x25Gb/s`  |    16 |   |   |   | | 
+| kubenode RSD | own     | 1х6338/32GB/1xNVMe256GB/10Gb/s     | 16    | 8   |   |   | 
+| kubenode Driver | own  | `i5-13500`/`64GB/NVMe256GB/`25Gb/s   |   64  |  2  |    |   |
+| kubenode Envoy  | own  | 1х4216/64GB/NVMe256GB/25Gb/s       |    16 |  1  |   |   | 
+| kubenode Postgres | own| 2х6338/16x32GB`/1xNVMe4T/25Gb/s    |    64 |  2  |   |   | 
+| kubenode Redis  | own  | 1х2374/4GB/1xNVMe256GB/1Gb/s       |     2 |  1  |   | 10-20$  | 
+| kubenode ClickHouse | own | 2374/16GB/1xNVMe4T/10Gb/s       |     4 |  2  |   |   
+| kubenode Kafka  | own  | 2374/8GB/1xNVMe256GB/10Gb/s        |     4 |   1 |   |   | | 
 
 
 ### Использованные источники
