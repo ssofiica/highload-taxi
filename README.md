@@ -157,7 +157,7 @@ SSL-терминация будет происходить на балансир
 ## 5. Логическая схема БД <a name="5"></a>
 ![Пример изображения](bd5.png)
 
-| Таблица             | БД        | Размер строки, байт | Кол-во записей | Объем | Чтение, Кбит/с | Запись, Кбит/с |
+| Таблица             | БД        | Размер строки, бит | Кол-во записей | Объем | Чтение, Кбит/с | Запись, Кбит/с |
 |---------------------|-----------|--------------------------|----------------|-------|--------|--------|
 | ride                | PostgreSQL | 530  | 4 млрд  | 2 Тб   |  255  |  425  |
 | driver              | PostgreSQL | 870  | 1 млн   | 830 Мб |  135  |  -  |
@@ -169,7 +169,7 @@ SSL-терминация будет происходить на балансир
 | rating              | PostgreSQL | 14   | 80 млн  | 1 Гб   |  9  |  3  |
 | driver rating values| PostgreSQL | 106  | 2,5 мдрд| 240 Гб |  -  |  10  |
 | passanger rating values|PostgreSQL | 106| 2,5 млрд| 240 Гб |  -  |  10  |
-| geoposition         | ClickHouse | 36   | 3 трлн  | 100 Тб |  -  |  10000  |
+| geoposition         | ClickHouse | 36   | 1 трлн  | 30 Тб |  -  |  10000  |
 | current geoposition | Redis | 76   | 280 тыс | 20 Мб  |  25  |  20000  |
 | demand              | Redis | 148  | 7 млн   | 1 Гб   | 115  |  115  |
 | proposal            | Redis | 128  | 7 млн   | 950 Мб | 66   |  82  |
@@ -272,28 +272,28 @@ Geoposition особенно велика, произведем партицир
 
 ## 11. Выбор оборудования и хостинга<a name="11"></a>
 
-| Сервис   | Целевая пиковая нагрузка приложения | CPU | RAM | Net |
+| Сервис   | Целевая пиковая нагрузка приложения, rps | CPU | RAM | Net |
 | -------- | ----------------------------------- | --- | --- | --- |
-| Ride, Surge, Dispatch | 1k | 128 | 512 GB | 3 MB/s  |
-| Driver   | 81k | 700 | 512 GB  | 237 MB/s |
-| Envoy    | 85k |  16 | 64 GB  | 249 MB/s |
-| Postgres | 80k |  64 | 512 GB | 10 MB/s  |
-| Redis    | 320 |  2  | 4 GB   | 19 MB/s  |
-| ClickHouse | 9,6k rpm | 4 | 16 GB |1,6 MB/m |
-| Kafka    | 160 | 4   | 8 GB | 26 KB/s |
+| Ride, Surge, Dispatch | 1k | 128 | 512 GB | 24 Кбит/с  |
+| Driver   | 81k | 700 | 512 GB  | 38 Мбит/с |
+| Envoy    | 85k |  64 | 64 GB  | 249 Мбит/с |
+| Postgres | 1,2k |  64 | 512 GB | 170 Кбит/с  |
+| Redis    | 160k |  16  | 8 GB   | 19 Мбит/с  |
+| ClickHouse | 80k | 64 | 32 GB |2,7 Мбит/с |
+| Kafka    | 80k | 64   | 32 GB | 2,7 Мбит/с |
 
 Ride, Surge, Dispatch хоть и имеют сравнительно небольшой rps, но у них самые нагруженные вычисления<br>
 Envoy - 1 core per 10k rps, request+response=3 KB
 
 | Название     | Хостинг | Конфигурация                       | Cores | Cnt | Покупка | Аренда |
 | ------------ | ------- | ---------------------------------- | ----- | --- | ------- | ------ |
-| kubenode RSD | own     | 1х4216/64GB/NVMe256GB/10Gb/s       |    16 |  8  |   | 23k руб/мес  | 
-| kubenode Driver | own  | 1х2374/8GB/NVMe100GB/25Gb/s        |    8  | 100 |   | 10k руб.мес  |
-| kubenode Envoy  | own  | 1х4216/64GB/NVMe256GB/25Gb/s       |    16 |  1  |   |   | 
+| kubenode RSD | own     | 6338/64GB/NVMe256GB/10Gb/s       |    16 |  8  |   | 23k руб/мес  | 
+| kubenode Driver | own  | 6338/16х32GB/NVMe100GB/25Gb/s        |   64   | 12 |   | 10k руб/мес  |
+| kubenode Envoy  | own  | 6338/64GB/NVMe256GB/25Gb/s       |    16 |  1  |   |   | 
 | kubenode Postgres | own| 2х6338/16x32GB/NVMe4T/25Gb/s       |    64 |  2  |   | 90к руб/мес  | 
-| kubenode Redis  | own  | 1х2374/4GB/NVMe256GB/1Gb/s         |     2 |  1  |   |   | 
-| kubenode ClickHouse | own | 1х2374/16GB/NVMe4T/10Gb/s       |     4 |  2  |   |   
-| kubenode Kafka  | own  | 1х2374/8GB/NVMe256GB/10Gb/s        |     4 |  1  |   |   | | 
+| kubenode Redis  | own  | 6338/8GB/NVMe256GB/10Gb/s         |   16 |  2  |   |   | 
+| kubenode ClickHouse | own | 6338/16GB/NVMe4T/10Gb/s       |     16 |  10  |   |   
+| kubenode Kafka  | own  | 6338/16GB/NVMe4T/10Gb/s        |     16 |  2  |   |   | | 
 
 | ![Пример изображения](postgres-server.png) | ![Пример изображения](RSD-server.png) |
 | ---- |---|
