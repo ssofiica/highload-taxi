@@ -276,30 +276,24 @@ Geoposition особенно велика, произведем партицир
 | -------- | ----------------------------------- | --- | --- | --- |
 | Ride, Surge, Dispatch | 1k | 128 | 512 GB | 24 Кбит/с  |
 | Driver   | 81k | 700 | 512 GB  | 38 Мбит/с |
-| Envoy    | 85k |  64 | 64 GB  | 249 Мбит/с |
+| Envoy    | 85k |  16 | 64 GB  | 249 Мбит/с |
 | Postgres | 1,2k |  64 | 512 GB | 170 Кбит/с  |
-| Redis    | 160k |  16  | 8 GB   | 19 Мбит/с  |
+| Redis    | 160k |  16  | 16 GB  | 19 Мбит/с  |
 | ClickHouse | 80k | 64 | 32 GB |2,7 Мбит/с |
 | Kafka    | 80k | 64   | 32 GB | 2,7 Мбит/с |
 
 Ride, Surge, Dispatch хоть и имеют сравнительно небольшой rps, но у них самые нагруженные вычисления<br>
 Envoy - 1 core per 10k rps, request+response=3 KB
 
-| Название     | Хостинг | Конфигурация                       | Cores | Cnt | Покупка | Аренда |
-| ------------ | ------- | ---------------------------------- | ----- | --- | ------- | ------ |
-| kubenode RSD | own     | 6338/64GB/NVMe256GB/10Gb/s       |    16 |  8  |   | 23k руб/мес  | 
-| kubenode Driver | own  | 6338/16х32GB/NVMe100GB/25Gb/s        |   64   | 12 |   | 10k руб/мес  |
-| kubenode Envoy  | own  | 6338/64GB/NVMe256GB/25Gb/s       |    16 |  1  |   |   | 
-| kubenode Postgres | own| 2х6338/16x32GB/NVMe4T/25Gb/s       |    64 |  2  |   | 90к руб/мес  | 
-| kubenode Redis  | own  | 6338/8GB/NVMe256GB/10Gb/s         |   16 |  2  |   |   | 
-| kubenode ClickHouse | own | 6338/16GB/NVMe4T/10Gb/s       |     16 |  10  |   |   
-| kubenode Kafka  | own  | 6338/16GB/NVMe4T/10Gb/s        |     16 |  2  |   |   | | 
-
-| ![Пример изображения](postgres-server.png) | ![Пример изображения](RSD-server.png) |
-| ---- |---|
-
-| ![Пример изображения](postgres-server2.png) | ![Пример изображения](envoy-server.png) |
-| -- | --| 
+| Название     | Хостинг | Конфигурация                       | Cores | Cnt | Аренда |
+| ------------ | ------- | ---------------------------------- | ----- | --- | ------ |
+| kubenode RSD | own     | 6338/64GB/NVMe256GB/10Gb/s         |    16 |  8  | 30к руб/мес | 
+| kubenode Driver | own  | 6338/4х32GB/NVMe100GB/25Gb/s       |    64 |  5  | 80к руб/мес |
+| kubenode Envoy  | own  | 6338/64GB/NVMe256GB/25Gb/s         |    16 | 12  | 30к руб/мес | 
+| kubenode Postgres | own| 2х6338/16x32GB/NVMe4T/25Gb/s       |    64 |  2  | 400к руб/мес | 
+| kubenode Redis  | own  | 6338/16GB/NVMe256GB/10Gb/s         |    16 | 10  | 20к руб/мес | 
+| kubenode ClickHouse | own | 6338/16GB/NVMe4T/10Gb/s         |    16 | 10  | 180к руб/мес |
+| kubenode Kafka  | own  | 6338/16GB/NVMe512GB/10Gb/s         |    16 |  2  | 40к руб/мес |
 
 ### Использованные источники
 [^1]: [Презентация для инвесторов МКПАО "Яндекс" с данными за 2 квартал 2024](https://yastatic.net/s3/ir-docs/docs/2024/q2/57a1cu049ffbd144aeged36d47h173c2/IR_2Q2024_RUS_NEW.pdf)
